@@ -22,7 +22,7 @@ const MultistepForm: React.FC = () => {
   if (!userContext) return null;
   const { setUser } = userContext;
 
-  // 🕒 Timer logic with useRef
+  // Countdown timer
   useEffect(() => {
     if (step === 2 && resendTimer > 0) {
       timerRef.current = window.setTimeout(() => {
@@ -34,7 +34,7 @@ const MultistepForm: React.FC = () => {
     };
   }, [resendTimer, step]);
 
-  // 🚀 OTP generation
+  // Generate OTP
   const generateOtp = () => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(otp);
@@ -42,20 +42,30 @@ const MultistepForm: React.FC = () => {
     setResendTimer(30);
   };
 
-  // 📩 Email validation and submission
+  // Email validation
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailInput || !emailRegex.test(emailInput)) {
+
+    const cleanedEmail = emailInput.trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}$/;
+
+    if (!cleanedEmail) {
+      setError("Email field cannot be empty.");
+      return;
+    }
+
+    if (!emailRegex.test(cleanedEmail)) {
       setError("Please enter a valid email address.");
       return;
     }
+
+    setEmailInput(cleanedEmail);
     generateOtp();
     setStep(2);
   };
 
-  // 🔢 OTP entry logic
+  // OTP input logic
   const handleOtpChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
     const updatedDigits = [...otpDigits];
@@ -83,7 +93,7 @@ const MultistepForm: React.FC = () => {
     setStep(3);
   };
 
-  // 🖼️ Image upload and validation
+  // Profile image validation
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -94,7 +104,7 @@ const MultistepForm: React.FC = () => {
     }
   };
 
-  // 👤 Profile form submission
+  // Profile form submission
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -106,7 +116,6 @@ const MultistepForm: React.FC = () => {
     if (!profileImage || !profileImage.type.startsWith("image/")) {
       setError("Please upload a valid image file.");
       return;
-
     }
     setUser({
       email: emailInput,
@@ -136,30 +145,48 @@ const MultistepForm: React.FC = () => {
           </div>
         )}
 
-        {/* Step 1 */}
+        {/* Step 1: Email */}
         {step === 1 && (
           <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#005EB8]"
-            />
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email Address
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-400"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M2 4a2 2 0 012-2h16a2 2 0 012 2v16a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm2 0v.01l8 5 8-5V4H4zm16 2.236l-8 5-8-5V20h16V6.236z" />
+                </svg>
+              </span>
+              <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="pl-10 w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#005EB8]"
+              />
+            </div>
             <button type="submit" className={buttonClass}>
               Send OTP
             </button>
           </form>
         )}
 
-        {/* Step 2 */}
+        {/* Step 2: OTP */}
         {step === 2 && (
           <form onSubmit={handleOtpSubmit} className="space-y-6">
             <div className="flex gap-3 justify-center">
               {otpDigits.map((digit, idx) => (
                 <input
                   key={idx}
-                  ref={(el) => (inputsRef.current[idx] = el)}
+                  ref={(el) => {
+                    inputsRef.current[idx] = el;
+                  }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -184,13 +211,15 @@ const MultistepForm: React.FC = () => {
           </form>
         )}
 
-        {/* Step 3 */}
+        {/* Step 3: Profile */}
         {step === 3 && (
           <form onSubmit={handleProfileSubmit} className="space-y-4">
+            <label htmlFor="fullname" className="block text-sm font-medium text-gray-700">
+              Full Name
+            </label>
             <input
               type="text"
-              placeholder="Full Name"
-              value={fullName}
+              placeholder="Enter Full Name" value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#005EB8]"
             />
